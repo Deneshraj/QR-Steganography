@@ -87,8 +87,6 @@ def hide_msg(img_pixels, msg, k=1):
 
     for i in range(rows):
         for j in range(0, cols - 6, 8):
-            if(pos >= size):
-                return
             cmp = [img_pixels[i][j + k] for k in range(8)]
             if(i > 1):
                 pmp = [img_pixels[i - 1][j + k] for k in range(8)]
@@ -96,24 +94,28 @@ def hide_msg(img_pixels, msg, k=1):
                     if is_single_coloured(cmp):
                         continue
                     else:
-                        new_cmp = change_cmp(cmp[:], int(msg[pos]))
-                        for k in range(8):
-                            img_pixels[i][j + k] = new_cmp[k]
-                        pos += 1
+                        if pos < size:
+                            new_cmp = change_cmp(cmp[:], int(msg[pos]))
+                            for k in range(8):
+                                img_pixels[i][j + k] = new_cmp[k]
+                            pos += 1
                 else:
                     if is_single_coloured(cmp):
                         continue
                     else:
-                        match_adjustment(pmp, cmp)
+                        new_cmp = match_adjustment(pmp, cmp)
+                        for k in range(8):
+                            img_pixels[i][j + k] = new_cmp[k]
                         continue
             else:
                 if is_single_coloured(cmp):
                     continue
                 else:
-                    new_cmp = change_cmp(cmp[:], int(msg[pos]))
-                    for k in range(8):
-                        img_pixels[i][j + k] = new_cmp[k]
-                    pos += 1
+                    if pos < size:
+                        new_cmp = change_cmp(cmp[:], int(msg[pos]))
+                        for k in range(8):
+                            img_pixels[i][j + k] = new_cmp[k]
+                        pos += 1
 
 
 def convert_to_long_list(img_pixels):
