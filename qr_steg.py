@@ -76,6 +76,7 @@ def match_adjustment(pmp, cmp):
 
 
 def hide_msg(img_pixels, msg, k=1):
+    # TODO:A Method To Check if we can Hide the Data inside msg or not
     pos = 0
     size = len(msg)
 
