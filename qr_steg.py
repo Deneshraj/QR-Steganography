@@ -55,7 +55,9 @@ def change_cmp(cmp, bit):
             break
 
     if(bit == 1):
-        cmp[pos + 1] = cmp[pos]
+        cmp[pos + 1] = 254 if cmp[pos] == 255 else 1
+    else:
+        cmp[pos + 1] = 2 if cmp[pos] == 0 else 253
 
     return cmp
 
@@ -92,31 +94,59 @@ def hide_msg(img_pixels, msg, k=1):
             if(i > 1):
                 pmp = [img_pixels[i - 1][j + k] for k in range(8)]
                 if is_single_coloured(pmp):
-                    if is_single_coloured(cmp):
-                        continue
-                    else:
-                        if pos < size:
-                            new_cmp = change_cmp(cmp[:], int(msg[pos]))
-                            for k in range(8):
-                                img_pixels[i][j + k] = new_cmp[k]
-                            pos += 1
+                    if not is_single_coloured(cmp) and pos < size:
+                        new_cmp = change_cmp(cmp[:], int(msg[pos]))
+                        for k in range(8):
+                            img_pixels[i][j + k] = new_cmp[k]
+                        pos += 1
                 else:
-                    if is_single_coloured(cmp):
-                        continue
-                    else:
+                    if not is_single_coloured(cmp):
                         new_cmp = match_adjustment(pmp, cmp)
                         for k in range(8):
                             img_pixels[i][j + k] = new_cmp[k]
                         continue
             else:
-                if is_single_coloured(cmp):
-                    continue
-                else:
-                    if pos < size:
-                        new_cmp = change_cmp(cmp[:], int(msg[pos]))
-                        for k in range(8):
-                            img_pixels[i][j + k] = new_cmp[k]
-                        pos += 1
+                if not is_single_coloured(cmp) and pos < size:
+                    new_cmp = change_cmp(cmp[:], int(msg[pos]))
+                    for k in range(8):
+                        img_pixels[i][j + k] = new_cmp[k]
+                    pos += 1
+
+    return img_pixels
+
+
+def get_msg_bit(cmp):
+    if (1 in cmp) or (254 in cmp):
+        return 1
+    elif (2 in cmp) or (253 in cmp):
+        return 0
+    else:
+        return None
+
+
+def retrieve_msg(img_pixels, k=1):
+    ret_string = ""
+    pmp = None
+    cmp = None
+    rows = len(img_pixels)
+    cols = len(img_pixels[0])
+
+    for i in range(rows):
+        for j in range(0, cols - 6, 8):
+            cmp = [img_pixels[i][j + k] for k in range(8)]
+            if i > 1:
+                pmp = [img_pixels[i - 1][j + k] for k in range(8)]
+                if not is_single_coloured(cmp):
+                    if is_single_coloured(pmp):
+                        bit = get_msg_bit(cmp)
+                        if bit != None:
+                            ret_string += str(bit)
+            else:
+                bit = get_msg_bit(cmp)
+                if bit != None:
+                    ret_string += str(bit)
+    
+    return ret_string
 
 
 def convert_to_long_list(img_pixels):
@@ -132,13 +162,16 @@ def convert_to_long_list(img_pixels):
 
 
 def main():
-    generate_qr_code(version=10, msg="Hello, How are you?")
+    generate_qr_code(version=40, msg="Hello, How are you?")
     img_pixels = get_qr_pixels()
 
     msg = get_message()
     bin_msg = str_bin(msg)
 
     hide_msg(img_pixels, bin_msg)
+    
+    decoded_msg = retrieve_msg(img_pixels)
+    decoded_msg = bin_str(decoded_msg)
 
     width = len(img_pixels)
     height = len(img_pixels[0])
